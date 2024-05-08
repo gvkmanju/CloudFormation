@@ -1,0 +1,115 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Creating VPC with Application Load Balancer, S3 bucket, and Amazon Cognito",
+  "Resources": {
+    "MyVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MyVPC"
+          }
+        ]
+      }
+    },
+    "SubnetA": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "MyVPC" },
+        "CidrBlock": "10.0.1.0/24",
+        "AvailabilityZone": "us-east-1a",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SubnetA"
+          }
+        ]
+      }
+    },
+    "SubnetB": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref": "MyVPC" },
+        "CidrBlock": "10.0.2.0/24",
+        "AvailabilityZone": "us-east-1b",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SubnetB"
+          }
+        ]
+      }
+    },
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Security group for Application Load Balancer",
+        "VpcId": { "Ref": "MyVPC" }
+      }
+    },
+    "LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Subnets": [ { "Ref": "SubnetA" }, { "Ref": "SubnetB" } ],
+        "SecurityGroups": [ "sg-12345678" ], // Replace with your existing security group ID
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MyLoadBalancer"
+          }
+        ]
+      }
+    },
+    "MyBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "my-unique-bucket-name",
+        "AccessControl": "Private",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "MyBucket"
+          }
+        ]
+      }
+    },
+    "UserPool": {
+      "Type": "AWS::Cognito::UserPool",
+      "Properties": {
+        "UserPoolName": "MyUserPool",
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireUppercase": true,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": true
+          }
+        },
+        "Schema": [
+          {
+            "Name": "email",
+            "AttributeDataType": "String",
+            "Mutable": true,
+            "Required": true
+          },
+          {
+            "Name": "password",
+            "AttributeDataType": "String",
+            "Mutable": true,
+            "Required": true
+          }
+        ]
+      }
+    },
+    "UserPoolClient": {
+      "Type": "AWS::Cognito::UserPoolClient",
+      "Properties": {
+        "ClientName": "MyUserPoolClient",
+        "UserPoolId": { "Ref": "UserPool" }
+      }
+    }
+  }
+}
